@@ -1,0 +1,17 @@
+PS C:\Users\bosko\Desktop\soaSocna> Get-History
+
+  Id CommandLine
+  -- -----------
+   1 docker system prune -a
+   2 docker network prune
+   3 docker volume prune -a
+   4 docker system prune -a
+   5 docker volume prune -a
+   6 docker network prune
+   7 docker compose up
+   8 docker compose up
+
+  Id CommandLine
+  -- -----------
+   1 docker-compose -f psw-back-end/docker-compose-migration.yml up
+   2 docker exec -it 56a479e1f687  psql -U postgres -d explorerv -f /tmp/explorerv-init.sql

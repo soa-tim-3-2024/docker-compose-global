@@ -1,0 +1,120 @@
+version: "3.7"
+services:
+  tourserver:
+    build:
+      context: ./tours-service/tours-service/
+      dockerfile: Dockerfile
+    image: aplikacijadocker
+    container_name: aplikacijakon
+    restart: always
+    networks:
+      - tourserver
+    ports:
+      - 8081:8081
+    depends_on:
+      - database
+
+  database:
+    image: postgres:16-alpine
+    container_name: postgreskon
+    restart: always
+    networks:
+      - tourserver
+    ports:
+      - 4000:5432
+    environment:
+      POSTGRES_PASSWORD: super
+      POSTGRES_USER: postgres
+      POSTGRES_DB: nzm
+    volumes:
+      - database-data:/var/lib/postgresql/data
+
+  encounterserver:
+    build:
+      context: ./encounters-service/encounters-service/
+      dockerfile: Dockerfile
+    image: aplikacijaenkdok
+    container_name: aplikacijaenkkon
+    restart: always
+    networks:
+      - encounterserver
+    ports:
+      - 8082:8082
+    depends_on:
+      - dataenk
+
+  dataenk:
+    image: postgres:16-alpine
+    container_name: postgresenkkon
+    restart: always
+    networks:
+      - encounterserver
+    ports:
+      - 4001:5432
+    environment:
+      POSTGRES_PASSWORD: super
+      POSTGRES_USER: postgres
+      POSTGRES_DB: enknzm
+    volumes:
+      - dataenk-data:/var/lib/postgresql/data
+  
+  explorerv:
+    build:
+      dockerfile: Dockerfile
+      context: ./psw-back-end/
+      target: final
+    restart: on-failure
+    networks:
+      - databasepsw
+    ports:
+      - "44333:80"
+    environment:
+      DATABASE_HOST: databasepsw
+      DATABASE_PORT: 5432
+      DATABASE_PASSWORD: super
+      DATABASE_USER: postgres
+      DATABASE_SCHEMA: explorerv
+    depends_on:
+      - databasepsw
+
+  databasepsw:
+    image: postgres:13
+    restart: always
+    networks:
+      - databasepsw
+    environment:
+      POSTGRES_PASSWORD: super
+      POSTGRES_USER: postgres
+      POSTGRES_DB: explorerv
+    ports:
+      - "5432:5432"
+    volumes:       
+      - type: volume
+        source: databasepsw-data
+        target: /var/lib/postgresql/data
+      - type: bind
+        source: ./psw-back-end/init.sql
+        target: /tmp/explorerv-init.sql
+    
+    
+
+volumes:
+  database-data:
+    name: server-database
+  dataenk-data:
+    name: server-dataenk
+  databasepsw-data:
+    name: explorerv
+  
+
+networks:
+  tourserver:
+    name: tourserver
+    driver: bridge
+  encounterserver:
+    name: encounterserver
+    driver: bridge
+  databasepsw:
+    name: databasepsw
+    driver: bridge
+    
