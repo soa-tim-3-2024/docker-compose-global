@@ -10,7 +10,7 @@ services:
     networks:
       - tourserver
     ports:
-      - 8081:8081
+      - 8083:8083
     depends_on:
       - database
 
@@ -40,23 +40,50 @@ services:
       - encounterserver
     ports:
       - 8082:8082
+    environment:
+      - PORT=8082
+      - MONGO_DB_URI=mongodb://root:pass@mongo:27017
     depends_on:
-      - dataenk
+      mongo:
+        condition: service_healthy
 
-  dataenk:
-    image: postgres:16-alpine
-    container_name: postgresenkkon
+  mongo:
+    image: mongo
     restart: always
     networks:
       - encounterserver
     ports:
-      - 4001:5432
+      - "27017:27017"
     environment:
-      POSTGRES_PASSWORD: super
-      POSTGRES_USER: postgres
-      POSTGRES_DB: enknzm
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: pass
+      MONGO_INITDB_DATABASE: mongoDemo
+    # Docker healtcheck - checks if database is "alive"
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok'
+      interval: 10s
+      timeout: 10s
+      retries: 10
     volumes:
-      - dataenk-data:/var/lib/postgresql/data
+      - mongo_store:/data/db
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    networks:
+      - encounterserver
+    environment:
+      # hostname of mongo databse
+      - ME_CONFIG_MONGODB_SERVER=mongo
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=root
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=pass
+      - ME_CONFIG_MONGODB_URL=mongodb://root:pass@mongo:27017/
+    depends_on:
+      - mongo
+    ports:
+      - "8081:8081"
+    volumes:
+      - mongo_express_data:/data/db
   
   followerserver:
     build:
@@ -153,6 +180,8 @@ volumes:
     name: explorerv
   databasef-data:
     name: server-databasefollower
+  mongo_store:
+  mongo_express_data:
   
 
 networks:
