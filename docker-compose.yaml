@@ -168,6 +168,44 @@ services:
       - type: bind
         source: ./psw-back-end/init.sql
         target: /tmp/explorerv-init.sql
+
+  explorervStakeHolders:
+    build:
+      dockerfile: Dockerfile
+      context: ./stakeholders-service/
+      target: final
+    restart: on-failure
+    networks:
+      - databasepswStakeHolders
+    ports:
+      - "44333:80"
+    environment:
+      DATABASE_HOST: databasepswStakeHolders
+      DATABASE_PORT: 5432
+      DATABASE_PASSWORD: super
+      DATABASE_USER: postgres
+      DATABASE_SCHEMA: explorervStakeHolders
+    depends_on:
+      - databasepswStakeHolders
+
+  databasepswStakeHolders:
+    image: postgres:13
+    restart: always
+    networks:
+      - databasepswStakeHolders
+    environment:
+      POSTGRES_PASSWORD: super
+      POSTGRES_USER: postgres
+      POSTGRES_DB: explorervStakeHolders
+    ports:
+      - "5432:5432"
+    volumes:       
+      - type: volume
+        source: databasepswStakeHolders-data
+        target: /var/lib/postgresql/data
+      - type: bind
+        source: ./stakeholders-service/init.sql
+        target: /tmp/explorervStakeHolders-init.sql
     
     
 
@@ -178,6 +216,8 @@ volumes:
     name: server-dataenk
   databasepsw-data:
     name: explorerv
+  databasepswStakeHolders-data:
+    name: explorervStakeHolders
   databasef-data:
     name: server-databasefollower
   mongo_store:
@@ -191,8 +231,11 @@ networks:
   encounterserver:
     name: encounterserver
     driver: bridge
-  databasepsw:
-    name: databasepsw
+  explorerv:
+    name: explorerv
+    driver: bridge
+  explorervStakeHolders:
+    name: explorervStakeHolders
     driver: bridge
   followerserver:
     name: followerserver
